@@ -4,8 +4,8 @@
 #include "balance_controller.h"
 #include "tim.h"
 
-static uint32_t last_counter = 0;
-static uint32_t new_counter = 0;
+static uint16_t last_counter = 0;
+static uint16_t new_counter = 0;
 
 static float dt_s;
 
@@ -24,7 +24,7 @@ void balance_system_init(void)
     target.target_speed = 0.0f;
     target.target_turn = 0.0f;
 }
-static float counter_to_time(uint32_t new_counter, uint32_t last_counter)
+static float counter_to_time(uint16_t new_counter, uint16_t last_counter)
 {
     uint16_t counter_diff = new_counter - last_counter;
 
@@ -65,9 +65,7 @@ void balance_system_run(Balance_Target_t new_target,uint8_t *is_error,uint8_t *i
     else if (ret == 1)
     {
         last_counter = new_counter;
-        new_counter = __HAL_TIM_GET_COUNTER(&htim1);
-        dt_s = counter_to_time(new_counter, last_counter);
-        last_counter = new_counter;
+
         // Attitude_Update 成功更新姿态数据，继续执行控制算法
         chassis_speed = Chassis_Get_Speed(dt_s);
 

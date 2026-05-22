@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-float asinf(float x);
+float fast_asinf(float x);
 
 #ifdef __cplusplus
 }
