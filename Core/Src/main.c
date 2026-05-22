@@ -26,34 +26,14 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "MPU9250_AHRS.h"
-#include "MPU9250_Init.h"
-#include "stdio.h"
-#include "motor.h"
+#include "balance_system.h"
+#include "get_target.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-uint8_t mpu9250_buffer[22]; // 存储从 MPU9250 读取的原始数据的缓冲区
-
-float accel[3]; // 存储加速度计数据的数组
-float gyro[3]; // 存储陀螺仪数据的数组
-float mag[3]; // 存储磁力计数据的数组
-
-uint8_t is_mag_calib_enabled = 0; // 磁力计校准是否启用的标志
-uint8_t credible_of_accel = 0; // 加速度计数据是否可靠的标志
-
-float accel_bias[3]; // 存储加速度计偏置的数组
-float accel_scale[3]; // 存储加速度计缩放因子的数组
-float gyro_bias[3]; // 存储陀螺仪偏置的数组
-
-uint32_t last_update_tick = 0; // 上次更新的系统时钟滴答数
-int16_t imu_error_count = 0; // IMU 错误计数器
-
-float AHRS_kp = 2.0f; // Mahony 四元数融合算法的比例增益
-float AHRS_ki = 0.0f; // Mahony 四元数融合算法的积分增益
-
-static struct motor_speed the_motor_speed; // 存储电机速度的结构体变量
+static uint8_t is_error = 0; // 错误标志
+static Balance_Target_t target; // 平衡控制的目标状态
 
 /* USER CODE END PTD */
 
@@ -81,39 +61,6 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-/**
-  * @brief  通过 USART1 以 CSV 格式发送加速度计和陀螺仪调试数据。
-  * @param  ax X 轴加速度，单位 m/s^2。
-  * @param  ay Y 轴加速度，单位 m/s^2。
-  * @param  az Z 轴加速度，单位 m/s^2。
-  * @param  gx X 轴角速度，单位 rad/s。
-  * @param  gy Y 轴角速度，单位 rad/s。
-  * @param  gz Z 轴角速度，单位 rad/s。
-  * @retval None
-  */
-static void Debug_Send_IMU(float ax, float ay, float az,
-                           float gx, float gy, float gz)
-{
-    char buf[128];
-
-    int32_t ax_i = (int32_t)(ax * 1000.0f);
-    int32_t ay_i = (int32_t)(ay * 1000.0f);
-    int32_t az_i = (int32_t)(az * 1000.0f);
-
-    int32_t gx_i = (int32_t)(gx * 1000.0f);
-    int32_t gy_i = (int32_t)(gy * 1000.0f);
-    int32_t gz_i = (int32_t)(gz * 1000.0f);
-
-    int len = snprintf(buf, sizeof(buf),
-                       "%ld,%ld,%ld,%ld,%ld,%ld\r\n",
-                       ax_i, ay_i, az_i,
-                       gx_i, gy_i, gz_i);
-
-    if (len > 0)
-    {
-        HAL_UART_Transmit(&huart1, (uint8_t *)buf, (uint16_t)len, 10);
-    }
-}
 /* USER CODE END 0 */
 
 /**
@@ -153,38 +100,17 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
-  is_mag_calib_enabled = 0; // 是否启用磁力计标定，默认为0（不启用），可以根据需要修改为1（启用）
   HAL_TIM_Base_Start(&htim1); 
-  motor_init(); // 初始化电机控制相关的定时器和 GPIO
-  if(MPU9250_Init() != HAL_OK)
-  {
-    // 处理初始化失败的情况，例如记录错误日志或进入安全模式
-    Error_Handler();
-  }
-  Get_Data_From_Flash(accel_bias, accel_scale, is_mag_calib_enabled); // 从 flash 中读取加速度计的 bias 和 scale 数据 
-  MPU9250_Calibrate_Gyro(gyro_bias); // 进行陀螺仪标定，获取陀螺仪的零偏值
+
+  balance_system_init(); // 初始化平衡系统，包括姿态、底盘和控制器的初始化
   //获取定时器tim1的当前计数值，作为上次更新的系统时钟滴答数
   uint8_t first_update = 1; // 是否是第一次更新的标志
 
-  //MPU9250_Calibrate_Gyro(gyro_bias); // 进行陀螺仪标定，获取陀螺仪的零偏值
-
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  // while (1)
-  // {
-  //   HAL_UART_Transmit(&huart1,
-  //                     (uint8_t *)"1,2,3,4,5,6\r\n",
-  //                     13,
-  //                     10);
-  //   HAL_Delay(100);
-  // }
   while (1)
   {
     /* USER CODE END WHILE */
-    motor_set_pwm(1, 5000,0);
-    motor_set_pwm(2, 5000,0); 
+    get_new_target(&target); // 获取新的目标状态
+    balance_system_run(target, &is_error, &first_update); // 运行平衡系统，传入目标状态、错误标志和第一次更新标志
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

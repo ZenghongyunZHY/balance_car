@@ -25,6 +25,13 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/spi.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/tim.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/usart.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/pid.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/balance_controller.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/chassis.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/attitude.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/math_approx.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/balance_system.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/get_target.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/motor.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/mpu9250_lowlevel.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/MPU9250_Init.c
