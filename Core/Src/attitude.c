@@ -29,7 +29,7 @@ static float quat_to_pitch(float q[4])
     if (s > 1.0f) s = 1.0f;
     if (s < -1.0f) s = -1.0f;
 
-    return asinf(s);
+    return fast_asinf(s);
 }
 
 void Attitude_Init(void)

@@ -26,7 +26,7 @@ void balance_system_init(void)
 }
 static float counter_to_time(uint32_t new_counter, uint32_t last_counter)
 {
-    uint32_t counter_diff = new_counter - last_counter;
+    uint16_t counter_diff = new_counter - last_counter;
 
     //一个counter是1us
     return (float)counter_diff / 1000000.0f;
@@ -47,7 +47,6 @@ void balance_system_run(Balance_Target_t new_target,uint8_t *is_error,uint8_t *i
     }
 
     dt_s = counter_to_time(new_counter, last_counter);
-    last_counter = new_counter;
 
     int ret = Attitude_Update(dt_s, &attitude);
 
@@ -65,6 +64,10 @@ void balance_system_run(Balance_Target_t new_target,uint8_t *is_error,uint8_t *i
     }
     else if (ret == 1)
     {
+        last_counter = new_counter;
+        new_counter = __HAL_TIM_GET_COUNTER(&htim1);
+        dt_s = counter_to_time(new_counter, last_counter);
+        last_counter = new_counter;
         // Attitude_Update 成功更新姿态数据，继续执行控制算法
         chassis_speed = Chassis_Get_Speed(dt_s);
 
