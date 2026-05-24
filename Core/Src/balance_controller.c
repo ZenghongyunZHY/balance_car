@@ -24,7 +24,7 @@ void Balance_Controller_Init(void)
      */
     PID_Init(&speed_pid, 0.8f, 0.1f, 0.0f, -TARGET_PITCH_MAX, TARGET_PITCH_MAX, -0.5f, 0.5f);
 
-    PID_Init(&angle_pid, 4500.0f, 0.0f, 120.0f, -PWM_MAX, PWM_MAX, -0.2f, 0.2f);
+    PID_Init(&angle_pid, 16000.0f, 0.3f, 220.0f, -PWM_MAX, PWM_MAX, -0.2f, 0.2f);
 
     PID_Init(&turn_pid, 1200.0f, 0.0f, 0.0f, -DIFF_PWM_MAX, DIFF_PWM_MAX, -0.5f, 0.5f);
 }

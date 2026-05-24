@@ -8,7 +8,7 @@ extern "C" {
 typedef struct
 {
     float pitch;// 俯仰角，单位弧度
-    float gyro_y;// 陀螺仪 y 轴数据，单位 °/s
+    float gyro_y;// 陀螺仪 y 轴数据，单位 rad/s
 } Attitude_t;
 
 void Attitude_Init(void);

@@ -4,10 +4,15 @@
 #include "balance_controller.h"
 #include "tim.h"
 
-static uint16_t last_counter = 0;
-static uint16_t new_counter = 0;
+//姿态解算的dt
+static uint16_t ahrs_last_counter = 0;
+static uint16_t ahrs_new_counter = 0;
+//控制算法的dt
+static uint16_t control_last_counter = 0;
+static uint16_t control_new_counter = 0;
 
-static float dt_s;
+static float ahrs_dt_s;
+static float control_dt_s;
 
 static Attitude_t attitude;
 static Chassis_Speed_t chassis_speed;
@@ -36,19 +41,21 @@ void balance_system_run(Balance_Target_t new_target,uint8_t *is_error,uint8_t *i
 {
     target = new_target;
 
-    new_counter = __HAL_TIM_GET_COUNTER(&htim1);
+    ahrs_new_counter = __HAL_TIM_GET_COUNTER(&htim1);
+    control_new_counter = ahrs_new_counter; // 使用相同的计数器来计算控制算法的 dt
 
     if(*is_first_run)
     {
         // 第一次运行时，初始化 last_counter 并设置 is_first_run 标志为 0
-        last_counter = new_counter;
+        ahrs_last_counter = ahrs_new_counter;
+        control_last_counter = control_new_counter;
         *is_first_run = 0;
         return;
     }
 
-    dt_s = counter_to_time(new_counter, last_counter);
+    ahrs_dt_s = counter_to_time(ahrs_new_counter, ahrs_last_counter);
 
-    int ret = Attitude_Update(dt_s, &attitude);
+    int ret = Attitude_Update(ahrs_dt_s, &attitude);
 
     if (ret == 0)
     {
@@ -64,17 +71,18 @@ void balance_system_run(Balance_Target_t new_target,uint8_t *is_error,uint8_t *i
     }
     else if (ret == 1)
     {
-        last_counter = new_counter;
-
-        // Attitude_Update 成功更新姿态数据，继续执行控制算法
-        chassis_speed = Chassis_Get_Speed(dt_s);
-
-        feedback.pitch = attitude.pitch;
-        feedback.gyro_y = attitude.gyro_y;
-        feedback.speed_left = chassis_speed.left_mps;
-        feedback.speed_right = chassis_speed.right_mps;
-
-        output = Balance_Controller_Update(target, feedback, dt_s);
-        Chassis_Set_PWM(output.left_pwm, output.right_pwm);
+        ahrs_last_counter = ahrs_new_counter;
     }
+    control_dt_s = counter_to_time(control_new_counter, control_last_counter);
+    control_last_counter = control_new_counter;
+    chassis_speed = Chassis_Get_Speed(control_dt_s);
+
+    feedback.pitch = attitude.pitch;
+    feedback.gyro_y = attitude.gyro_y;
+    feedback.speed_left = chassis_speed.left_mps;
+    feedback.speed_right = chassis_speed.right_mps;
+
+    output = Balance_Controller_Update(target, feedback, control_dt_s);
+    Chassis_Set_PWM(output.left_pwm, output.right_pwm);
+
 }
