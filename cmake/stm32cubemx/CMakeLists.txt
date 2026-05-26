@@ -35,7 +35,6 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/motor.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/mpu9250_lowlevel.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/MPU9250_Init.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/MPU9250_AHRS.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/stm32f1xx_it.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/stm32f1xx_hal_msp.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/sysmem.c
