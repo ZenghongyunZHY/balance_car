@@ -3,8 +3,8 @@
 
 #define CHASSIS_PWM_MAX 9000
 
-#define PWM_DEAD_ZONE 700
-#define PWM_NOISE_BAND 210    // 小于这个认为是噪声，不输出
+#define PWM_DEAD_ZONE 350
+#define PWM_NOISE_BAND 80    // 小于这个认为是噪声，不输出
 
 static void set_one_motor_signed(uint8_t channel, int pwm)
 {
@@ -72,8 +72,8 @@ static int add_deadzone(int pwm)
 
 void Chassis_Set_PWM(int left_pwm, int right_pwm)
 {
-    left_pwm = add_deadzone(left_pwm);
-    right_pwm = add_deadzone(right_pwm);
+    //left_pwm = add_deadzone(left_pwm);
+    //right_pwm = add_deadzone(right_pwm);
 
     set_one_motor_signed(1, left_pwm);
     set_one_motor_signed(2, right_pwm);
