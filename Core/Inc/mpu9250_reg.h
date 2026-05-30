@@ -32,6 +32,7 @@ extern "C" {
 #define MPU9250_REG_I2C_SLV4_CTRL          0x34U
 #define MPU9250_REG_I2C_SLV4_DI            0x35U
 #define MPU9250_REG_I2C_MST_STATUS         0x36U
+#define MPU9250_REG_INT_STATUS             0x3AU
 #define MPU9250_REG_ACCEL_XOUT_H           0x3BU
 #define MPU9250_REG_GYRO_XOUT_H            0x43U
 #define MPU9250_REG_USER_CTRL              0x6AU
@@ -45,6 +46,8 @@ extern "C" {
 #define MPU9250_USER_CTRL_I2C_MST_EN       0x20U
 #define MPU9250_USER_CTRL_I2C_IF_DIS       0x10U
 #define MPU9250_USER_CTRL_FIFO_RST         0x04U
+
+#define MPU9250_INT_STATUS_DATA_RDY        0x01U
 
 #define AK8963_REG_ST1                     0x02U
 #define AK8963_REG_HXL                     0x03U

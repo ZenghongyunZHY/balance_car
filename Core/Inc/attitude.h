@@ -24,6 +24,7 @@ extern volatile float dbg_pitch_acc_raw;
 extern volatile float dbg_pitch_acc_zeroed;
 extern volatile float dbg_pitch_zero;
 extern volatile float dbg_gyro_y;
+extern volatile uint8_t dbg_mpu_data_ready;
 
 void Attitude_Init(void);
 int Attitude_Update(float dt, Attitude_t *attitude);

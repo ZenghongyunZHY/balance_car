@@ -4,6 +4,8 @@
 #include "balance_controller.h"
 #include "tim.h"
 
+#define CONTROL_DT_MAX_S 0.1f
+
 //姿态解算的dt
 static uint16_t ahrs_last_counter = 0;
 static uint16_t ahrs_new_counter = 0;
@@ -74,6 +76,17 @@ void balance_system_run(Balance_Target_t new_target,uint8_t *is_error,uint8_t *i
         ahrs_last_counter = ahrs_new_counter;
     }
     control_dt_s = counter_to_time(control_new_counter, control_last_counter);
+    if (control_dt_s <= 0.0f)
+    {
+        return;
+    }
+
+    if (control_dt_s > CONTROL_DT_MAX_S)
+    {
+        control_last_counter = control_new_counter;
+        return;
+    }
+
     control_last_counter = control_new_counter;
     chassis_speed = Chassis_Get_Speed(control_dt_s);
 

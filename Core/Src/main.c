@@ -105,18 +105,12 @@ int main(void)
   balance_system_init(); // 初始化平衡系统，包括姿态、底盘和控制器的初始化
   //获取定时器tim1的当前计数值，作为上次更新的系统时钟滴答数
   uint8_t first_update = 1; // 是否是第一次更新的标志
-  uint32_t last_tick = HAL_GetTick();
 
   while (1)
   {
     /* USER CODE END WHILE */
-    if ((HAL_GetTick() - last_tick) >= 5U)
-    {
-      last_tick += 5U;
-
-      get_new_target(&target); // 获取新的目标状态
-      balance_system_run(target, &is_error, &first_update); // 运行平衡系统，传入目标状态、错误标志和第一次更新标志
-    }
+    get_new_target(&target); // 获取新的目标状态
+    balance_system_run(target, &is_error, &first_update); // 运行平衡系统，传入目标状态、错误标志和第一次更新标志
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

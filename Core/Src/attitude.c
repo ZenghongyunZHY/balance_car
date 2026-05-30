@@ -16,7 +16,7 @@
 #define ATTITUDE_ACCEL_LSB_TO_MPS2      (ATTITUDE_GRAVITY_MPS2 / 8192.0f)
 #define ATTITUDE_GYRO_LSB_TO_RADPS      ((ATTITUDE_PI / 180.0f) / 65.5f)
 
-#define ATTITUDE_COMPLEMENTARY_ALPHA    0.98f
+#define ATTITUDE_COMPLEMENTARY_TAU_S    0.25f
 #define ATTITUDE_ACCEL_TRUST_RANGE      2.0f
 
 #define ATTITUDE_DT_DEFAULT_S           0.005f
@@ -43,6 +43,7 @@ volatile float dbg_pitch_acc_raw = 0.0f;
 volatile float dbg_pitch_acc_zeroed = 0.0f;
 volatile float dbg_pitch_zero = 0.0f;
 volatile float dbg_gyro_y = 0.0f;
+volatile uint8_t dbg_mpu_data_ready = 0U;
 
 static int16_t parse_i16_be(const uint8_t *data)
 {
@@ -103,10 +104,24 @@ static HAL_StatusTypeDef read_imu_frame_dma(uint8_t *buffer)
 {
     if (imu_dma_started == 0U)
     {
-        HAL_StatusTypeDef status = MPU9250_ReadRegsDMA(MPU9250_REG_ACCEL_XOUT_H,
-                                                       buffer,
-                                                       ATTITUDE_IMU_FRAME_SIZE,
-                                                       ATTITUDE_DMA_TIMEOUT_MS);
+        uint8_t int_status = 0U;
+        HAL_StatusTypeDef status = MPU9250_ReadReg(MPU9250_REG_INT_STATUS, &int_status);
+        if (status != HAL_OK)
+        {
+            dbg_mpu_data_ready = 0U;
+            return status;
+        }
+
+        dbg_mpu_data_ready = ((int_status & MPU9250_INT_STATUS_DATA_RDY) != 0U) ? 1U : 0U;
+        if (dbg_mpu_data_ready == 0U)
+        {
+            return HAL_BUSY;
+        }
+
+        status = MPU9250_ReadRegsDMA(MPU9250_REG_ACCEL_XOUT_H,
+                                     buffer,
+                                     ATTITUDE_IMU_FRAME_SIZE,
+                                     ATTITUDE_DMA_TIMEOUT_MS);
         if (status != HAL_OK)
         {
             return status;
@@ -124,17 +139,6 @@ static HAL_StatusTypeDef read_imu_frame_dma(uint8_t *buffer)
 
     imu_dma_started = 0U;
     return status;
-}
-
-static void start_next_imu_frame_dma(void)
-{
-    if (MPU9250_ReadRegsDMA(MPU9250_REG_ACCEL_XOUT_H,
-                            mpu_buffer,
-                            ATTITUDE_IMU_FRAME_SIZE,
-                            ATTITUDE_DMA_TIMEOUT_MS) == HAL_OK)
-    {
-        imu_dma_started = 1U;
-    }
 }
 
 static uint8_t accel_is_trusted(const float accel[3])
@@ -207,6 +211,7 @@ void Attitude_Init(void)
     pitch_zero = 0.0f;
     gyro_y_bias = 0.0f;
     dbg_pitch_zero = pitch_zero;
+    dbg_mpu_data_ready = 0U;
 
     if (MPU9250_Init() != HAL_OK)
     {
@@ -273,12 +278,11 @@ int Attitude_Update(float dt, Attitude_t *attitude)
 
     if (dbg_acc_trusted != 0U)
     {
-        pitch_next = (ATTITUDE_COMPLEMENTARY_ALPHA * pitch_gyro) +
-                     ((1.0f - ATTITUDE_COMPLEMENTARY_ALPHA) * pitch_acc);
+        float alpha = ATTITUDE_COMPLEMENTARY_TAU_S / (ATTITUDE_COMPLEMENTARY_TAU_S + dt_s);
+        pitch_next = (alpha * pitch_gyro) + ((1.0f - alpha) * pitch_acc);
     }
 
     pitch_rad = wrap_pi(pitch_next);
-    start_next_imu_frame_dma();
 
     attitude->pitch = pitch_rad;
     attitude->gyro_y = gyro_y;
