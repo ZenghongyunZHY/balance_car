@@ -3,8 +3,8 @@
 
 #define CHASSIS_PWM_MAX 9000
 
-#define PWM_DEAD_ZONE 2000
-#define PWM_NOISE_BAND 300    // 小于这个认为是噪声，不输出
+#define PWM_DEAD_ZONE 700
+#define PWM_NOISE_BAND 210    // 小于这个认为是噪声，不输出
 
 static void set_one_motor_signed(uint8_t channel, int pwm)
 {
